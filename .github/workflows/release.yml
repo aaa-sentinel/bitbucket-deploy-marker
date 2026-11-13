@@ -1,0 +1,43 @@
+# Builds the Bitbucket Pipe image and pushes it to Amazon ECR Public when a version tag (1.0.0) is pushed.
+# AWS access is OpenID Connect: the role in the AWS_ROLE_ARN variable only trusts tags of this repository.
+name: Release
+
+on:
+  push:
+    branches: [main]
+    tags: ['*.*.*']
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: shellcheck -s bash pipe/pipe.sh pipe/deploy-marker.sh
+
+  release:
+    needs: lint
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: pipe.yml points at this tag
+        run: |
+          image="$(sed -n 's/^image: \(.*\):.*$/\1/p' pipe.yml)"
+          grep -q "^image: ${image}:${GITHUB_REF_NAME}$" pipe.yml || { echo "pipe.yml does not point at ${GITHUB_REF_NAME}"; exit 1; }
+          echo "IMAGE=${image}" >> "$GITHUB_ENV"
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+      - uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+      - name: Build and push
+        run: |
+          docker build -t "${IMAGE}:${GITHUB_REF_NAME}" -t "${IMAGE}:${GITHUB_REF_NAME%%.*}" .
+          docker push "${IMAGE}:${GITHUB_REF_NAME}"
+          docker push "${IMAGE}:${GITHUB_REF_NAME%%.*}"

@@ -1,0 +1,11 @@
+name: AAA Sentinel deploy marker
+image: public.ecr.aws/u1c8u4c5/deploy-marker:1.0.0
+description: Record a deployment in AAA Sentinel, so cost anomalies and monitoring incidents show what was deployed right before them.
+repository: https://github.com/aaa-sentinel/bitbucket-deploy-marker
+maintainer:
+  name: AAA Sentinel
+  website: https://app.aaa-sentinel.com
+tags:
+  - deployment
+  - monitoring
+  - finops
