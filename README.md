@@ -12,7 +12,7 @@ Add this step after the step that deploys:
 - step:
     name: Record the deployment in AAA Sentinel
     script:
-      - pipe: docker://public.ecr.aws/u1c8u4c5/deploy-marker:1
+      - pipe: docker://public.ecr.aws/aaa-sentinel/deploy-marker:1
         variables:
           SENTINEL_CLIENT_ID: $SENTINEL_CLIENT_ID
           SENTINEL_CLIENT_SECRET: $SENTINEL_CLIENT_SECRET
